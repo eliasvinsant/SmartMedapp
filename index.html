@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartMed — AI Health Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --panel: #12161d;
+      --panel-2: #151a22;
+      --panel-3: #0f131a;
+      --text: #e8edf7;
+      --muted: #a2acbd;
+      --accent: #26d07c;
+      --accent-2: #4aa3ff;
+      --accent-3: #6ad6ff;
+      --danger: #ff6b6b;
+      --stroke: #232b36;
+      --glow: rgba(38, 208, 124, 0.25);
+      --shadow: 0 24px 60px rgba(8, 10, 16, 0.55);
+      --radius: 20px;
+      --radius-sm: 14px;
+      --radius-lg: 28px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Manrope", sans-serif;
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(900px 700px at 80% -20%, rgba(74, 163, 255, 0.2), transparent 60%),
+        radial-gradient(700px 600px at -10% 10%, rgba(38, 208, 124, 0.18), transparent 55%),
+        linear-gradient(180deg, #0a0c10 0%, #0a0c10 55%, #090b0f 100%);
+    }
+
+    .device {
+      width: min(92vw, 430px);
+      border-radius: 36px;
+      padding: 14px;
+      background: #07090d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 40px 120px rgba(5, 7, 12, 0.65);
+    }
+
+    .app {
+      border-radius: 28px;
+      overflow: hidden;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 780px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 8px;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.3px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 20px 14px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(38, 208, 124, 0.95), rgba(74, 163, 255, 0.85));
+      box-shadow: 0 10px 25px rgba(38, 208, 124, 0.35);
+      position: relative;
+    }
+
+    .logo-mark::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      background: linear-gradient(135deg, rgba(38, 208, 124, 0.9), rgba(74, 163, 255, 0.9));
+      color: #081014;
+      box-shadow: 0 12px 30px rgba(38, 208, 124, 0.35);
+    }
+
+    .btn.secondary {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--stroke);
+      box-shadow: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(38, 208, 124, 0.35);
+    }
+
+    .mobile-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+    }
+
+    .menu-panel {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 7, 12, 0.72);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 16px;
+      z-index: 10;
+    }
+
+    .menu-panel.open {
+      display: flex;
+    }
+
+    .menu-card {
+      width: 100%;
+      max-width: 320px;
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 8px;
+    }
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 14px;
+      color: var(--text);
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.03);
+      font-weight: 600;
+      transition: background 0.2s ease;
+    }
+
+    .menu-link span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .menu-link.active,
+    .menu-link:hover {
+      background: rgba(74, 163, 255, 0.12);
+    }
+
+    .screens {
+      position: relative;
+      padding: 0 20px 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .screen-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .headline {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+
+    .subhead {
+      margin: 0;
+      color: var(--muted);
+      max-width: 520px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .card.soft {
+      background: var(--panel-2);
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .health-score {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 22px;
+      align-items: center;
+    }
+
+    .score-ring {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) 78%, rgba(38, 208, 124, 0.15) 0);
+      display: grid;
+      place-items: center;
+      position: relative;
+      box-shadow: 0 0 40px rgba(38, 208, 124, 0.35);
+    }
+
+    .score-ring::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      background: var(--panel-3);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .score-value {
+      position: relative;
+      font-size: 52px;
+      font-weight: 700;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .score-label {
+      position: relative;
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .score-meta {
+      display: grid;
+      gap: 14px;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(74, 163, 255, 0.12);
+      color: #b9d8ff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .insight {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .insight .card {
+      border-left: 2px solid rgba(74, 163, 255, 0.5);
+    }
+
+    .coach {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .coach-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(74, 163, 255, 0.9), rgba(106, 214, 255, 0.9));
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: #06121b;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar span {
+      position: absolute;
+      inset: 0;
+      width: 60%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(38, 208, 124, 0.8), rgba(74, 163, 255, 0.8));
+    }
+
+    .sleep-chart {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      height: 120px;
+    }
+
+    .sleep-bar {
+      flex: 1;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(74, 163, 255, 0.9), rgba(38, 208, 124, 0.7));
+      opacity: 0.8;
+    }
+
+    .leaderboard {
+      display: grid;
+      gap: 14px;
+    }
+
+    .leader-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+    }
+
+    .rank {
+      font-weight: 600;
+      color: var(--accent-3);
+    }
+
+    .comparison {
+      display: grid;
+      gap: 12px;
+    }
+
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 40px;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .comparison-row strong {
+      color: var(--text);
+    }
+
+    .brief-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .brief-grid .card {
+      background: linear-gradient(135deg, rgba(18, 22, 29, 0.95), rgba(21, 26, 34, 0.9));
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(38, 208, 124, 0.15);
+      color: #9af2c9;
+    }
+
+    .bottom-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px 20px 24px;
+      border-top: 1px solid var(--stroke);
+      background: var(--panel-3);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .device {
+        width: 100%;
+        border-radius: 0;
+        padding: 0;
+      }
+
+      .app {
+        border-radius: 0;
+        min-height: 100vh;
+      }
+
+      .screens {
+        padding: 0 16px 20px;
+      }
+    }
+
+    .health-score {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .score-meta {
+      width: 100%;
+      text-align: left;
+    }
+
+    .grid.two,
+    .grid.three,
+    .grid.four {
+      grid-template-columns: 1fr;
+    }
+
+    .comparison-row {
+      grid-template-columns: 1fr;
+    }
+  </style>
+</head>
+<body>
+  <div class="device">
+    <div class="app">
+      <div class="status-bar">
+        <span>09:41</span>
+        <span class="status-pill">5G · 86%</span>
+      </div>
+      <header>
+        <div class="logo">
+          <div class="logo-mark"></div>
+          SmartMed
+        </div>
+        <button class="mobile-toggle" aria-label="Toggle menu">☰</button>
+      </header>
+
+      <div class="menu-panel" id="menu">
+        <div class="menu-card">
+          <a class="menu-link active" href="#" data-screen="home">Home Dashboard <span>Core Index</span></a>
+          <a class="menu-link" href="#" data-screen="ai">AI Insights <span>Coach</span></a>
+          <a class="menu-link" href="#" data-screen="sleep">Sleep <span>Stages</span></a>
+          <a class="menu-link" href="#" data-screen="recovery">Recovery <span>Readiness</span></a>
+          <a class="menu-link" href="#" data-screen="social">Leaderboard <span>Friends</span></a>
+          <a class="menu-link" href="#" data-screen="briefs">Brief System <span>Morning</span></a>
+        </div>
+      </div>
+
+      <div class="screens">
+      <section class="screen active" id="home">
+        <div class="screen-header">
+          <div>
+            <h1 class="headline">Добро утро, Alex</h1>
+            <p class="subhead">Твоят Core Index е стабилен. AI Coach препоръчва балансиран старт и фокус върху възстановяването.</p>
+          </div>
+          <div class="chip">Smart Coach • Live</div>
+        </div>
+
+        <div class="card">
+          <div class="health-score">
+            <div class="score-ring">
+              <div>
+                <div class="score-value">86</div>
+                <div class="score-label">Health Score</div>
+              </div>
+            </div>
+            <div class="score-meta">
+              <div class="meta-row">
+                <span>Core Index</span>
+                <strong>86 / 100</strong>
+              </div>
+              <div class="meta-row">
+                <span>Възстановяване</span>
+                <strong>78%</strong>
+              </div>
+              <div class="meta-row">
+                <span>Стрес баланс</span>
+                <strong>Нисък</strong>
+              </div>
+              <div class="meta-row">
+                <span>AI съвет</span>
+                <strong>Лека активност</strong>
+              </div>
+              <div class="bar"><span style="width: 78%"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid four" style="margin-top: 20px;">
+          <div class="card soft">
+            <div class="chip">Sleep</div>
+            <h3 class="headline" style="font-size: 20px;">7ч 15м</h3>
+            <p class="subhead">Недоспал си с 15% спрямо целта.</p>
+          </div>
+          <div class="card soft">
+            <div class="chip">Stress</div>
+            <h3 class="headline" style="font-size: 20px;">28</h3>
+            <p class="subhead">Нисък стрес, добро възстановяване.</p>
+          </div>
+          <div class="card soft">
+            <div class="chip">Recovery</div>
+            <h3 class="headline" style="font-size: 20px;">78%</h3>
+            <p class="subhead">Поддържай умерен ритъм.</p>
+          </div>
+          <div class="card soft">
+            <div class="chip">Activity</div>
+            <h3 class="headline" style="font-size: 20px;">4 820</h3>
+            <p class="subhead">Стъпки до момента.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="ai">
+        <div class="screen-header">
+          <div>
+            <h1 class="headline">AI Insights</h1>
+            <p class="subhead">Интелигентен анализ на съня, стреса и готовността ти за тренировка.</p>
+          </div>
+          <button class="btn secondary">Обнови анализа</button>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="coach">
+              <div class="coach-avatar">AI</div>
+              <div>
+                <strong>Smart Coach</strong>
+                <div class="subhead" style="margin-top: 4px;">Твоят персонален health companion.</div>
+              </div>
+            </div>
+            <div class="insight" style="margin-top: 18px;">
+              <div class="card soft">Недоспал си с 15% и това влияе на HRV.</div>
+              <div class="card soft">Препоръчва се лека активност и повече хидратация.</div>
+              <div class="card soft">Планирай 20 минути stretch вечерта.</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="headline" style="font-size: 22px;">Smart Coach Focus</h3>
+            <p class="subhead">Дневни решения и приоритети за оптимално възстановяване.</p>
+            <div style="margin-top: 18px; display: grid; gap: 12px;">
+              <div class="meta-row">
+                <span>Фокус днес</span>
+                <strong>Възстановяване</strong>
+              </div>
+              <div class="meta-row">
+                <span>Риск от претоварване</span>
+                <strong style="color: var(--danger);">Среден</strong>
+              </div>
+              <div class="meta-row">
+                <span>Оптимален час за тренировка</span>
+                <strong>18:30</strong>
+              </div>
+              <div class="bar"><span style="width: 62%"></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="sleep">
+        <div class="screen-header">
+          <div>
+            <h1 class="headline">Sleep</h1>
+            <p class="subhead">Качество на съня и детайлен разпад по фази.</p>
+          </div>
+          <div class="chip">Средно 7ч 05м</div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <h3 class="headline" style="font-size: 22px;">Последни 7 дни</h3>
+            <div class="sleep-chart" style="margin-top: 18px;">
+              <div class="sleep-bar" style="height: 80%"></div>
+              <div class="sleep-bar" style="height: 65%"></div>
+              <div class="sleep-bar" style="height: 75%"></div>
+              <div class="sleep-bar" style="height: 60%"></div>
+              <div class="sleep-bar" style="height: 90%"></div>
+              <div class="sleep-bar" style="height: 70%"></div>
+              <div class="sleep-bar" style="height: 85%"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="meta-row">
+              <span>Общо сън</span>
+              <strong>7ч 15м</strong>
+            </div>
+            <div class="meta-row">
+              <span>Deep sleep</span>
+              <strong>1ч 42м</strong>
+            </div>
+            <div class="meta-row">
+              <span>Light sleep</span>
+              <strong>4ч 26м</strong>
+            </div>
+            <div class="meta-row">
+              <span>Sleep quality</span>
+              <strong>82 / 100</strong>
+            </div>
+            <div class="bar" style="margin-top: 16px;"><span style="width: 82%"></span></div>
+            <p class="subhead" style="margin-top: 14px;">AI препоръка: измести лягането с 20 мин по-рано.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="recovery">
+        <div class="screen-header">
+          <div>
+            <h1 class="headline">Recovery</h1>
+            <p class="subhead">Готовност за тренировка и възстановяване на нервната система.</p>
+          </div>
+          <div class="chip">Readiness • 78%</div>
+        </div>
+
+        <div class="grid three">
+          <div class="card">
+            <div class="chip">HRV</div>
+            <h3 class="headline" style="font-size: 22px;">68 ms</h3>
+            <p class="subhead">Стабилно ниво спрямо средното ти.</p>
+          </div>
+          <div class="card">
+            <div class="chip">Recovery %</div>
+            <h3 class="headline" style="font-size: 22px;">78%</h3>
+            <p class="subhead">Поддържай умерен интензитет.</p>
+          </div>
+          <div class="card">
+            <div class="chip">Readiness</div>
+            <h3 class="headline" style="font-size: 22px;">Добра</h3>
+            <p class="subhead">30-40 мин cardio са оптимални.</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+          <h3 class="headline" style="font-size: 22px;">Recovery Trend</h3>
+          <div class="comparison" style="margin-top: 16px;">
+            <div class="comparison-row">
+              <strong>Сутрин</strong>
+              <div class="bar"><span style="width: 70%"></span></div>
+              <span>70%</span>
+            </div>
+            <div class="comparison-row">
+              <strong>Следобед</strong>
+              <div class="bar"><span style="width: 78%"></span></div>
+              <span>78%</span>
+            </div>
+            <div class="comparison-row">
+              <strong>Вечер</strong>
+              <div class="bar"><span style="width: 62%"></span></div>
+              <span>62%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="social">
+        <div class="screen-header">
+          <div>
+            <h1 class="headline">Social / Leaderboard</h1>
+            <p class="subhead">Сравнение на Health Score с приятели и ранкинг за седмицата.</p>
+          </div>
+          <button class="btn secondary">Покани приятел</button>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <h3 class="headline" style="font-size: 22px;">Класация</h3>
+            <div class="leaderboard" style="margin-top: 16px;">
+              <div class="leader-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="rank">#1</div>
+                  <div class="avatar">A</div>
+                  <div>
+                    <strong>Alex</strong>
+                    <div class="subhead">Score 86</div>
+                  </div>
+                </div>
+                <strong>86</strong>
+              </div>
+              <div class="leader-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="rank">#2</div>
+                  <div class="avatar">M</div>
+                  <div>
+                    <strong>Mira</strong>
+                    <div class="subhead">Score 82</div>
+                  </div>
+                </div>
+                <strong>82</strong>
+              </div>
+              <div class="leader-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="rank">#3</div>
+                  <div class="avatar">V</div>
+                  <div>
+                    <strong>Viktor</strong>
+                    <div class="subhead">Score 79</div>
+                  </div>
+                </div>
+                <strong>79</strong>
+              </div>
+              <div class="leader-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div class="rank">#4</div>
+                  <div class="avatar">E</div>
+                  <div>
+                    <strong>Elena</strong>
+                    <div class="subhead">Score 76</div>
+                  </div>
+                </div>
+                <strong>76</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="headline" style="font-size: 22px;">Сравнение</h3>
+            <div class="comparison" style="margin-top: 18px;">
+              <div class="comparison-row">
+                <strong>Alex</strong>
+                <div class="bar"><span style="width: 86%"></span></div>
+                <span>86</span>
+              </div>
+              <div class="comparison-row">
+                <strong>Mira</strong>
+                <div class="bar"><span style="width: 82%"></span></div>
+                <span>82</span>
+              </div>
+              <div class="comparison-row">
+                <strong>Viktor</strong>
+                <div class="bar"><span style="width: 79%"></span></div>
+                <span>79</span>
+              </div>
+              <div class="comparison-row">
+                <strong>Elena</strong>
+                <div class="bar"><span style="width: 76%"></span></div>
+                <span>76</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="briefs">
+        <div class="screen-header">
+          <div>
+            <h1 class="headline">Brief System</h1>
+            <p class="subhead">Morning, Midday и Night brief за бързи решения през деня.</p>
+          </div>
+          <div class="chip">AI Summary</div>
+        </div>
+
+        <div class="brief-grid">
+          <div class="card">
+            <div class="tag">Morning Brief</div>
+            <h3 class="headline" style="font-size: 22px;">Енергията е стабилна</h3>
+            <p class="subhead">Започни с 15 мин динамично раздвижване и повече вода.</p>
+          </div>
+          <div class="card">
+            <div class="tag" style="background: rgba(74, 163, 255, 0.15); color: #b9d8ff;">Midday</div>
+            <h3 class="headline" style="font-size: 22px;">Фокус върху възстановяване</h3>
+            <p class="subhead">Препоръка: лека активност и 20 мин пауза за дишане.</p>
+          </div>
+          <div class="card">
+            <div class="tag" style="background: rgba(255, 255, 255, 0.1); color: #dfe7f6;">Night</div>
+            <h3 class="headline" style="font-size: 22px;">Оптимизирай съня</h3>
+            <p class="subhead">Изключи екрани 45 мин по-рано за по-дълбок сън.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="bottom-actions">
+      <button class="btn secondary">Синхронизирай</button>
+      <button class="btn">Нов анализ</button>
+    </div>
+  </div>
+</div>
+
+  <script>
+    const menuLinks = document.querySelectorAll('.menu-link');
+    const screens = document.querySelectorAll('.screen');
+    const mobileToggle = document.querySelector('.mobile-toggle');
+    const menu = document.querySelector('#menu');
+
+    function activateScreen(target) {
+      screens.forEach((screen) => {
+        screen.classList.toggle('active', screen.id === target);
+      });
+      menuLinks.forEach((link) => {
+        link.classList.toggle('active', link.dataset.screen === target);
+      });
+    }
+
+    menuLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        activateScreen(link.dataset.screen);
+        menu.classList.remove('open');
+      });
+    });
+
+    mobileToggle.addEventListener('click', () => {
+      menu.classList.toggle('open');
+    });
+  </script>
+</body>
+</html>
